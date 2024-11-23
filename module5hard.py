@@ -1,30 +1,34 @@
-from time import sleep
+import time
+
+
 class User:
-    def __init__(self):
+    def __init__(self, nickname, password, age):
         self.nickname = nickname
-        self.password = password
+        self.password = hash(password)
         self.age = age
+
     def __str__(self):
         return self.nickname
 
-    def __int__(self):
-        return (hash(password)), self.age
+    def __eq__(self, other):
+        return other.nickname == self.nickname
+
+    def get_info(self):
+        return self.nickname, self.password
+
 
 class Video:
-    def __init__(self, title, duration, time_now=0, adult_mode = False):
+    def __init__(self, title, duration, adult_mode=False):
         self.title = title
         self.duration = duration
-        self.time_now = time_now
+        self.time_now = 0
         self.adult_mode = adult_mode
 
     def __str__(self):
         return self.title
 
-    def __int__(self):
-        return self.duration, self.time_now
-
-    def __bool__(self):
-        return self.adult_mode
+    def __repr__(self):
+        return self.title
 
 
 class UrTube:
@@ -32,57 +36,53 @@ class UrTube:
         self.users = []
         self.videos = []
         self.current_user = None
-        self.logged_in = False
-        self.current_video = None
-
 
     def log_in(self, login, password):
         for user in self.users:
-           if(login, hash(password)) == user.get_info():
-              self.current_user = user
-           return user
+            if (login, hash(password)) == user.get_info(): #обращается к классу User и сравнивает данные оттуда
+                self.current_user = user
+                return user # break
 
     def register(self, nickname, password, age):
         new_user = User(nickname, password, age)
         if new_user not in self.users:
             self.users.append(new_user)
-            self.current_usser = new_user
-        elif age < 18:
-            print("Вам нет 18 лет, пожалуйста покиньте страницу")
-            self.current_video = None
+            self.current_user = new_user
         else:
-           print(f"Такой пользователь {nickname} уже существует")
+            print(f"Пользователь {nickname} уже существует")
 
     def log_out(self):
         self.current_user = None
 
-    def add(self, *videos):
+    def add(self, *videos: Video):
         for video in videos:
             if video.title not in self.videos:
-               self.videos.append(video)
-    def get_videos(self, search_word):
-        res_search = []
-        search_word_lower = [item.lower() for item in search_word]
-        j=0
-        for i in search_word_lower or search_word:
-            res_search.append(search_word[j])
-            j+=1
-        return res_search
+                self.videos.append(video)
 
-    def watch_video(self, video_title):
-        if not self.logged_in:
-            print("Войдите в аккаунт, чтобы смотреть видео")
+    def get_videos(self, search):
+        titles = []
+        for video in self.videos:
+            if search.lower() in str(video).lower():
+                titles.append(video)
+
+        return titles
+
+    def watch_video(self, title):
+        if self.current_user is None:
+            print('Войдите в аккаунт чтобы смотреть видео')
             return
-
-        if video_title.lower() in self.current_video.lower():
-            print(f"Начало воспроизведения видео: {self.current_video}")
-            for second in range(1, 11):
-                print(f"Секунда воспроизведения: {second}")
-                sleep(1)
-            print("Конец видео")
-            self.current_video = None
-        else:
-            print("Видео не найдено")
+        for video in self.videos:
+            if title == video.title: #обращается к классу Video, сравнивает title из списка из класса Video
+                if video.adult_mode and self.current_user.age >= 18:
+                    while video.time_now < video.duration:
+                        video.time_now += 1
+                        print(video.time_now, end=' ')
+                        time.sleep(1)
+                    video.time_now = 0 #чтобы параметр обнулялся к каждому новому видео
+                    print('Конец видео')
+                else:
+                    print("Вам нет 18 лет, пожалуйста покиньте страницу")
+                break
 
 
 ur = UrTube()
